@@ -1,0 +1,3 @@
+[submodule "d1-unistroke-recognizer"]
+	path = d1-unistroke-recognizer
+	url = git@gitlab.com:g-dv/d1-unistroke-recognizer.git
