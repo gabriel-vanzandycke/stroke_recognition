@@ -48,16 +48,35 @@ def load_calib(folder):
     return build_calib(os.path.join(os.path.dirname(folder), 'camera_parameters.txt'))
 
 
-@dataclass
-class StrokeDetector:
-    operations: List[Callable]
-    display_progress: bool = True
-    def __call__(self, folder):
-        data = load_maps(folder, "depth")
-        for operation in self.operations:
-            data = operation(folder, data)
-        return data
 
+@dataclass
+class Display:
+    start: int = 100
+    n: int = 4
+    figsize: int = 2
+    bins: int = 100
+    def __enter__(self):
+        figsize = (self.figsize*(self.n+3), self.figsize)
+        self.fig, self.axes = plt.subplots(1, 2, figsize=figsize, width_ratios=[1, self.n])
+        return self
+    def __call__(self, depth, name=None):
+        indices = np.linspace(100, len(depth)-1, self.n).astype(np.int32)
+        self.axes[1].imshow(np.hstack([depth[i] for i in indices]))
+        self.axes[1].set_xticks(np.arange(self.n)*depth.shape[-1])
+        self.axes[1].set_xticklabels(indices)
+        self.axes[1].set_yticks([])
+
+        histogram, bins = np.histogram(depth, bins=self.bins, density=True)
+        histogram[-1] = histogram[0] = 0
+        self.axes[0].plot((bins[1:]+bins[:-1])/2, histogram)
+        self.axes[0].set_yticks([])
+
+        plt.tight_layout(pad=0)
+        if name:
+            self.axes[0].set_ylabel(name)
+        return depth
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        plt.show()
 
 
 
