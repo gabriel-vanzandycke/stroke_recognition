@@ -1,6 +1,7 @@
 import configparser
 from dataclasses import dataclass
 import os
+from typing import Tuple, List, Callable
 
 import cv2
 import glob
@@ -40,18 +41,23 @@ def make_video(filename, folder, fun):
             vm(image)
 
 
+def load_maps(folder, name):
+    return np.stack([imageio.imread(f) for f in sorted(glob.glob(os.path.join(folder, f"*_{name}.tif*")))])
+
+def load_calib(folder):
+    return build_calib(os.path.join(os.path.dirname(folder), 'camera_parameters.txt'))
+
+
 @dataclass
 class StrokeDetector:
-    @staticmethod
-    def load(folder):
-        depth      = np.dstack([imageio.imread(os.path.join(f))
-                                for f in sorted(glob.glob(os.path.join(folder, "*_depth.tif*")))])
-        confidence = np.dstack([imageio.imread(os.path.join(f))
-                                for f in sorted(glob.glob(os.path.join(folder, "*_confidence.tif*")))])
-        calib = build_calib(os.path.join(os.path.dirname(folder), 'camera_parameters.txt'))
-        return depth, confidence, calib
+    operations: List[Callable]
+    display_progress: bool = True
     def __call__(self, folder):
-        return self.process(*self.load(folder))
+        data = load_maps(folder, "depth")
+        for operation in self.operations:
+            data = operation(folder, data)
+        return data
+
 
 
 

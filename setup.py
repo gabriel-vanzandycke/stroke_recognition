@@ -15,8 +15,10 @@ setup(
         "calib3d",
         "jupyter",
         "scikit-learn",
+        "scikit-image",
         "cv2",
         "imageio",
-
+        "tqdm",
+        "matplotlib>=3.6.0",
     ],
 )
